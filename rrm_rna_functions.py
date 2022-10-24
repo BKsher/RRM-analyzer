@@ -11,6 +11,9 @@ from matplotlib.cm import ScalarMappable
 from sklearn.neighbors import KernelDensity
 from collections import Counter
 
+import pathlib
+abs_path = str(pathlib.Path(__file__).parent.resolve())
+
 class RNAScoring():
     def __init__(self):
         self.res_list = ['R', 'K', 'H', 'D', 'E', 'Q', 'N', 'S', 'T', 'Y', 'F',
@@ -19,34 +22,35 @@ class RNAScoring():
         self.nt_list = ["A", "G", "C", "U"]
 
         # Protein bias
-        fasta_rna_aln = \
-            "alignment_data/RNAs_aligned_cluster_0_nt_full_refined.fasta"
+        fasta_rna_aln = abs_path + \
+                "/alignment_data/RNAs_aligned_cluster_0_nt_full_refined.fasta"
         rna_seqs = list(SeqIO.parse(open(fasta_rna_aln), 'fasta'))
         self.rna_seqs_dict_full = {i.id: str(i.seq) for i in rna_seqs}
         self.bias_dict = Counter(
             [i.id.split("_")[0] + "_" + i.id.split("_")[1] for i in rna_seqs])
 
-        self.fasta_prot_aln = \
-          "alignment_data/rrm_bound_domains_aligned_processed_squeezed.fasta"
+        self.fasta_prot_aln = abs_path + \
+          "/alignment_data/rrm_bound_domains_aligned_processed_squeezed.fasta"
           
         prot_seqs = list(SeqIO.parse(open(self.fasta_prot_aln), 'fasta'))
         self.prot_seqs_dict_full = {"_".join(i.id.split("_")[:2]): str(i.seq) for i in prot_seqs}
 
         # Input data
-        master_aln = 'alignment_data/RRM_master_interaction_info_with_nt_unbiased_cluster_0.json'
+        master_aln = abs_path + \
+            '/alignment_data/RRM_master_interaction_info_with_nt_unbiased_cluster_0.json'
         self.aln_data = json.load(open(master_aln))
-        rna_aln = "alignment_data/neighbours_rna_cluster_0.json"
+        rna_aln = abs_path + "/alignment_data/neighbours_rna_cluster_0.json"
         self.rna_data = json.load(open(rna_aln))
         self.entries_list = list(self.rna_seqs_dict_full.keys())
 
         self.hmm_to_master_pos = {
-            29:77, 31:79, 33:81, 34:82, 37:90, 58:122, 60:124, 62:126, 66:135, 
-            68:137, 70:139, 72:141, 94:166, 97:169, 99:171, 101:173, 102:174, 
-            103:175, 104:176, 105:177
+            29: 77, 31: 79, 33: 81, 34: 82, 37: 90, 58: 122, 60: 124, 62: 126,
+            66: 135, 68: 137, 70: 139, 72: 141, 94: 166, 97: 169, 99: 171,
+            101: 173, 102: 174, 103: 175, 104: 176, 105: 177
         }
 
 
-    def load_scores(self, scores_folder="alignment_data/precalculated_scores/*.pkl"):
+    def load_scores(self, scores_folder=abs_path + "/alignment_data/precalculated_scores/*.pkl"):
         self.all_df_dict = {}
         for file in glob.glob(scores_folder):
             df = pd.read_pickle(file)
@@ -69,7 +73,8 @@ class RNAScoring():
                 if rna_pos_range[0] <= selected_pos[1] < rna_pos_range[1]:
                     nuc = rna_window[selected_pos[1] - rna_pos_range[0]]
                     res = rrm_seq[selected_pos[0]].upper()
-                    scores_by_pos.append(df.loc[res][nuc])
+                    if res != "-" and nuc != "-":
+                        scores_by_pos.append(df.loc[res][nuc])
 
             self.scores_dict[rna_window] = np.nanmean(scores_by_pos)
 
@@ -183,21 +188,48 @@ class RNAScoring():
         ids_to_align = [fasta.id for fasta in fasta_sequences]
 
         bashCmd = ["hmmalign", "--mapali",
-                   "alignment_data/rrm_bound_domains_aligned_processed_squeezed.fasta",
-                   "-o", "output_files/out_test_mapali.stockholm",
-                   "alignment_data/rrm_bound.hmm",
+                   abs_path + "/alignment_data/rrm_bound_domains_aligned_processed_squeezed.fasta",
+                   "-o", abs_path + "/output_files/out_test_mapali.stockholm",
+                   abs_path + "/alignment_data/rrm_bound.hmm",
                    "{}".format(fasta_file)]
 
         process = subprocess.Popen(bashCmd, stdout=subprocess.PIPE)
         process.communicate()
+        if process.returncode != 0:
+            exit("hmmalign failure")
 
-        align = AlignIO.read("output_files/out_test_mapali.stockholm", "stockholm")
-        seqs_dict = {aln_seq.id: str(aln_seq.seq) for aln_seq in align if aln_seq.id in ids_to_align}
+        align = AlignIO.read(abs_path +\
+                    "/output_files/out_test_mapali.stockholm", "stockholm")
 
-        if len(list(seqs_dict.values())[0]) != 243:
-            print("Input sequence is too long and cannot be properly handled,"
-                  " please include sequences containing a single RRM")
-            exit()
+        seqs_dict = {
+            aln_seq.id: str(aln_seq.seq) for aln_seq in align if aln_seq.id in ids_to_align}
 
+        if len(list(seqs_dict.values())[0]) > 243:
+            # Get the new mapping manually #TODO: MUST be a better way...
+            original_alignment = SeqIO.parse(
+                open(abs_path + "/alignment_data/rrm_bound_domains_aligned_processed_squeezed.fasta"), 'fasta')
+
+            orig_seq_to_map = list([str(i.seq).upper() for i in original_alignment][0])
+            new_seq_to_map = list([str(i.seq).upper() for i in align][0])
+
+            aln_length = len(orig_seq_to_map)
+
+            new_mapping = {}
+            new_gaps = 0
+            for i in range(aln_length):
+                if new_seq_to_map[:i+1] == orig_seq_to_map[:i+1]:
+                    new_mapping[i] = i + new_gaps
+                else:
+                    while new_seq_to_map[:i+1] != orig_seq_to_map[:i+1]:
+                        new_gaps += 1
+                        new_seq_to_map.pop(i)
+                    new_mapping[i] = i + new_gaps
+
+            # Update the seqs_dict to keep the right size and relevant part
+            # IT IS NOT THE REAL SEQUENCE
+
+            for seqid, seq in seqs_dict.items():
+                updated_seq = "".join([seq[new_mapping[pos]] for pos in new_mapping.keys()])
+                seqs_dict[seqid] = updated_seq
 
         return seqs_dict
