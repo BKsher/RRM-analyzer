@@ -1,5 +1,13 @@
 # RRMScorer documentation
-RRMScorer allows the user to easily predict how likely a single RRM is to bind ssRNA using a carefully generated alignment for the RRM structures in complex with RNA, from which we analyzed the interaction patterns and derived the scores (Please address to the publication for more details on the method REF)
+RRMScorer allows the user to predict how likely a single RRM is to bind ssRNA using a carefully generated alignment for the RRM structures in complex with RNA, from which we analyzed the interaction patterns and derived the scores.
+
+More details are available from the [publication related to this work](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1010859). Please also reference
+this publication if you use this code:
+
+Roca-Martínez J, Dhondge H, Sattler M, Vranken WF (2023) Deciphering the RRM-RNA recognition code: A computational analysis.
+PLOS Computational Biology 19(1): e1010859.
+
+https://doi.org/10.1371/journal.pcbi.1010859
 
 ---
 
