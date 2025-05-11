@@ -101,3 +101,9 @@ source ~/.bashrc
    Where:
    - `extracted_data.txt` - generated file
    - `output` - name of output folder for score files
+
+## Results
+
+1. plot_output - All plots with random distributions for current RRM inside the range + all p-values plot
+2. random_distribution_plots - All plots with random distrtbutions for random RRMs + Homo sapiens filter + all p-vales plots
+3. 1024_random_distribution - All plots with distributions for random windows from 1024 possible + all p-values plot 
