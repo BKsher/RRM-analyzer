@@ -25,18 +25,19 @@ class Manager():
                 rna_scoring.find_best_rna(rrm_seq=seq)
 
             elif self.usr_input.rna_seq:
-                rna_scoring.score_out_seq(
+                scores_dict, ordered_scores = rna_scoring.score_out_seq(
                     rrm_seq=seq, rna_seq=self.usr_input.rna_seq,
                     rna_pos_range=self.usr_input.rna_pos_range)
 
                 if self.usr_input.plot:
                     rna_scoring.plot_rna_kde(rna_seq=self.usr_input.rna_seq,
-                                      scores_dict=rna_scoring.scores_dict,
+                                      scores_dict=scores_dict,
                                       window_size=self.usr_input.window_size)
                 else:
                     print(seq_id)
-                    for key, score in rna_scoring.scores_dict.items():
-                        print(key, score)
+                    # Print all windows and scores in the original order
+                    for window, score in ordered_scores:
+                        print(window, score)
 
 class UserInput():
     def __init__(self):
@@ -85,5 +86,3 @@ if __name__ == '__main__':
     usr_input = UserInput()
     manager = Manager(usr_input)
     manager.input_handler()
-
-

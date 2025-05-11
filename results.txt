@@ -1,0 +1,24 @@
+Subsequence Not Found	Interaction Found			Found (No Interaction)
+---	---	---
+P09012_RRM1				Q93062_RRM1 (Conn: 54)		P26378_RRM2
+P08579_RRM1				Q99181_RRM1 (Conn: 42)		Q13148_RRM1
+Q06AA4_RRM1				P43332_RRM1 (Conn: 80)		Q7LL14_RRM1
+P19339_RRM1				Q00916_RRM1 (Conn: 82)		P26599_RRM1
+P26378_RRM1				P19339_RRM2 (Conn: 164)		P26368_RRM1
+Q92879_RRM3				P11940_RRM1 (Conn: 104)		P84103_RRM1
+P07910_RRM1				P04147_RRM1 (Conn: 34)		P22626_RRM1
+P38159_RRM1				P11940_RRM2 (Conn: 104)		P49960_RRM2
+P09651_RRM1				P38996_RRM1 (Conn: 72)		F1LQ48_RRM2
+G5EEW7_RRM1				P0DJD3_RRM1 (Conn: 81)		P62995_RRM1
+Q9NWB1_RRM1				O00425_RRM1 (Conn: 72)		O45189_RRM1
+Q15717_RRM3				Q92879_RRM2 (Conn: 138)		P26368_RRM2
+Q01130_RRM1				Q92879_RRM1 (Conn: 49)		G5ECJ4_RRM1
+P09651_RRM2				O95319_RRM2 (Conn: 100)	
+Q61474_RRM1		
+Q64368_RRM1		
+O95319_RRM3		
+
+	
+Warning: Data for RRM ID 'P08621_RRM1' was missing in extracted_data.txt during interaction check.
+Warning: Data for RRM ID 'Q15717_RRM1' was missing in extracted_data.txt during interaction check.
+Warning: Data for RRM ID 'Q99383_RRM1' was missing in extracted_data.txt during interaction check.

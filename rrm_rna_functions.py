@@ -63,10 +63,12 @@ class RNAScoring():
     def score_out_seq(self, rrm_seq, rna_seq, rna_pos_range):
         window_size = rna_pos_range[1] - rna_pos_range[0]
 
-        self.scores_dict = {}
+        # Now we'll store all windows and scores in order
+        all_windows = []
+        all_scores = []
+        
         for i in range(len(rna_seq) - (window_size - 1)):
             rna_window = rna_seq[i: i + window_size]
-            self.scores_dict[rna_window] = []
             scores_by_pos = []
 
             for selected_pos, df in self.load_scores().items():
@@ -76,9 +78,15 @@ class RNAScoring():
                     if res != "-" and nuc != "-":
                         scores_by_pos.append(df.loc[res][nuc])
 
-            self.scores_dict[rna_window] = np.nanmean(scores_by_pos)
-
-        return self.scores_dict
+            score = np.nanmean(scores_by_pos)
+            all_windows.append(rna_window)
+            all_scores.append(score)
+        
+        # Create a dictionary for compatibility with existing code
+        self.scores_dict = dict(zip(all_windows, all_scores))
+        
+        # But also return a list of (window, score) tuples to preserve order
+        return self.scores_dict, list(zip(all_windows, all_scores))
 
     def plot_rna_kde(self, rna_seq, scores_dict, window_size):
         pos_file = open(
@@ -140,7 +148,7 @@ class RNAScoring():
         ax.set_yticklabels(labels)
         plt.gca().invert_yaxis()
         plt.xlabel("Scores")
-        plt.show()
+        plt.savefig("rna_scores_plot.png")
         # plt.savefig("{}.png".format(outfile))
 
     def find_best_rna(self, rrm_seq):
