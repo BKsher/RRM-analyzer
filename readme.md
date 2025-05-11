@@ -1,126 +1,103 @@
-# RRMScorer documentation
-RRMScorer allows the user to predict how likely a single RRM is to bind ssRNA using a carefully generated alignment for the RRM structures in complex with RNA, from which we analyzed the interaction patterns and derived the scores.
+# WSL Setup Guide
 
-More details are available from the [publication related to this work](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1010859). Please also reference
-this publication if you use this code:
+## Install Windows Subsystem for Linux
 
-Roca-Martínez J, Dhondge H, Sattler M, Vranken WF (2023) Deciphering the RRM-RNA recognition code: A computational analysis.
-PLOS Computational Biology 19(1): e1010859.
+1. Open PowerShell as Administrator (right-click in search -> open as administrator)
+2. Run the following command:
+   ```powershell
+   dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+   ```
+3. Run the following command:
+   ```powershell
+   dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+   ```
+4. Restart your PC
 
-https://doi.org/10.1371/journal.pcbi.1010859
+## Install Ubuntu
 
----
+1. Open Microsoft Store and find Ubuntu
+2. Install -> Launch
 
-## Installation
+## How to Use Ubuntu (WSL)
 
-#### Clone this repository to your working environment:
-```console
-$ git clone git@bitbucket.org:bio2byte/rrmscorer.git && cd rrmscorer
+1. Open PowerShell 
+2. Run: `wsl`
+3. Your command line should start looking like this: 
+   ```
+   derfe@DESKTOP-D4CC88M:/mnt/c/Users/derfe$
+   ```
+
+## Install Conda
+
+Run the following commands:
+
+```bash
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+chmod +x miniconda.sh
+./miniconda.sh -b -p $HOME/miniconda
+eval "$($HOME/miniconda/bin/conda shell.bash hook)"
+echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(conda shell.bash hook)"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
-#### The following packages are required:
+## Setting Up RrmScorer Tool
 
-```python
-python==3.10.4
-numpy==1.21.5
-pandas==1.4.2
-biopython==1.79
-matplotlib==3.5.2
-scikit-learn==1.1.1
-hmmer==3.3.2
-```
-#### Via [Conda](https://docs.conda.io/en/latest/):
+1. Navigate to working folder:
+   ```bash
+   cd ~
+   ```
 
-```console
-$ conda create --yes --name rrmscorer python==3.10.4
-$ conda activate rrmscorer
-$ conda install --yes --file requirements.txt
-```
+2. Get RrmScorer:
+   ```bash
+   git clone https://bitbucket.org/bio2byte/rrmscorer.git
+   cd rrmscorer
+   ```
 
-#### Via [Virtual Environment](https://docs.python.org/3/tutorial/venv.html):
+3. Install environment and all libraries:
+   ```bash
+   conda create --yes --name rrmscorer python=3.10.4
+   conda activate rrmscorer
+   conda config --add channels conda-forge
+   conda install --yes numpy=1.21.5 pandas=1.4.2 biopython=1.79 matplotlib=3.5.2 scikit-learn=1.1.1
+   conda install --yes -c bioconda hmmer=3.3.2
+   ```
 
-```console
-$ python3 -m venv rrmscorer-venv
-$ source ./rrmscorer-venv/bin/activate
-$ python -m pip install numpy==1.21.5 pandas==1.4.2 biopython==1.79 matplotlib==3.5.2 scikit-learn==1.1.1 hmmer
-```
+4. Test that everything works:
+   ```bash
+   python rrm_rna_wrapper.py -RRM P19339_RRM1 -RNA UAUAUUAGUAGUA -ws 5
+   ```
 
-## How to run it:
-Either you are using Conda or Virtual Environments for your installation, before executing this software features, you need to setup the Python environment.
-Using Conda:
+5. Open in explorer `\\wsl.localhost\Ubuntu\home` and find rrmScorer folder. Add analyzer and data files:
+   - `rrm_analyzer.py`
+   - `extract_data.py`
+   - `journal.pcbi.1010859.s010.txt`
+   - `journal.pcbi.1010859.s011.txt`
+   - `proten_cds.fasta`
 
-```console
-$ conda activate rrmscorer
-```
-Using Virtual Environment:
+## How to Use Analyzer
 
-```console
-$ source ./rrmscorer-venv/bin/activate
-```
+1. Generate extracted_data.txt:
+   ```bash
+   python extract_data.py journal.pcbi.1010859.s011.txt proten_cds.fasta
+   ```
 
-Continue reading the next section to find further details about the available features.
-In case you need to deactivate this Python environment:
+2. Run the analyzer with different options:
 
-Using Conda:
+   ```bash
+   # Basic analysis
+   python rrm_analyzer.py extracted_data.txt output
+   
+   # For generating images connections vs random
+   python rrm_analyzer.py extracted_data.txt output_for_plots --batch-plot-distributions --iterations 5000
+   
+   # For generating images connections vs random INCLUDING random RRMs and HOMO SAPIENS ORGANISMS
+   python random_distribution.py extracted_data.txt
+   
+   # Images for scores + full - dataset mean
+   python rrm_analyzer.py extracted_data.txt output_dir --batch-binding-comparison --window-size 5
+   ```
 
-```console
-$ conda deactivate
-```
-
-Using Virtual Environment:
-
-```console
-$ deactivate
-```
-
-## Features
-RRMScorer has several features to either calculate the binding score for a specific RRM and RNA sequences, for a set of RRM sequences in a fasta file, or to explore which are the best RNA binders according to our scoring method.
-
-### i) Single RRM vs RNA
-To use this feature the user needs to input:
-
-1. `-RRM` The identifier of an RRM already included in the original alignment following the format UniProtId_RRMnumber (e.g., P19339_RRM1)
-2. `-RNA` The RNA sequence to test
-3. `-ws` The window size to test (**Only 3 and 5 nucleotide windows are accepted**)
-4. `-plot` [Optional] To generate score plots for all the RNA possible windows
-
-
-```console
-$ python rrm_rna_wrapper.py -RRM P19339_RRM1 -RNA UAUAUUAGUAGUA -ws 5 [-plot]
-```
-
-Example output:
-```console
-UAUAU -1.08
-AUAUU -0.99
-UAUUA -1.33
-AUUAG -0.90
-UUAGU -1.07
-```
-
-### ii) Fasta file with RRM sequences vs RNA
-To use this feature the user needs to input:
-
-1. `-fasta` Fasta file with 1 or more single RRM sequences. The sequences are aligned to the master alignment HMM
-1. `-RNA` The RNA sequence to test
-1. `-ws` The window size to test (**Only 3 and 5 nucleotide windows are accepted**)
-1. `-plot` [Optional] To generate score plots for all the RNA possible windows
-
-```console
-$ python rrm_rna_wrapper.py -fasta input_files/rrm_seq.fasta -RNA UAUAUUAGUAGUA -ws 5 [-plot]
-```
-
-
-### iii) Fasta file / RRM id to find top-scoring RNAs
-To use this feature the user needs to input:
-
-1. `-fasta` Fasta file or RRM is as described in the previous cases.
-1. `-ws` The window size to test (**Only 3 and 5 nucleotide windows are accepted**)
-1. `-top` To find the top-scoring RNA for the specified RRM/s
-
-```console
-$ python rrm_rna_wrapper.py -fasta input_files/rrm_seq.fasta -ws 5 -top
-```
-
-
-
+   Where:
+   - `extracted_data.txt` - generated file
+   - `output` - name of output folder for score files
